@@ -41,7 +41,7 @@ class Ball:
         self.y = y
         self.radius = radius
         self.x_vel = self.MAX_VEL
-        self.y_vel = 0
+        self.y_vel = self.MAX_VEL
 
     def draw(self, win):
         pygame.draw.circle(win, self.COLOR, (self.x, self.y), self.radius)
@@ -49,7 +49,7 @@ class Ball:
     def move(self):
         self.x += self.x_vel
         self.y += self.y_vel
-         
+        
 
 
 
@@ -80,7 +80,34 @@ def handle_paddle_movement(keys, left_paddle, right_paddle):
         right_paddle.move()
     if keys[pygame.K_DOWN] and (right_paddle.y+right_paddle.VEL+right_paddle.height)<=HEIGHT:
         right_paddle.move(False)
+
+def change_ball_vel(ball, paddle):
+    middle_y = paddle.y + paddle.height / 2
+    difference_in_y = middle_y - ball.y
+    reduction_factor = (paddle.height / 2) / ball.MAX_VEL
+    y_vel = difference_in_y / reduction_factor
+    ball.y_vel = -1 * y_vel
     
+
+def handle_collision(ball, left_paddle, right_paddle):
+    if ball.y + ball.radius >= HEIGHT:
+        ball.y_vel *= -1
+    elif ball.y - ball.radius <= 0:
+        ball.y_vel *= -1
+
+    if ball.x_vel < 0:
+        if ball.y >= left_paddle.y and ball.y <= left_paddle.y + left_paddle.height:
+            if ball.x - ball.radius <= left_paddle.x + left_paddle.width:
+                ball.x_vel *= -1
+
+                change_ball_vel(ball, left_paddle)
+
+    else:
+        if ball.y >= right_paddle.y and ball.y <= right_paddle.y + right_paddle.height:
+            if ball.x + ball.radius >= right_paddle.x:
+                ball.x_vel *= -1
+
+                change_ball_vel(ball, right_paddle)
 
 def main():
     run = True
@@ -102,6 +129,7 @@ def main():
         handle_paddle_movement(keys, left_paddle, right_paddle)
     
         ball.move()
+        handle_collision(ball, left_paddle, right_paddle)
     pygame.quit()
 
 if __name__ == '__main__':
